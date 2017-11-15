@@ -1,0 +1,42 @@
+#Traffic shaping configuration in CE router of MPLS link
+
+
+class-map match-any video-af4-ipp4
+ match ip precedence 4 
+ match dscp cs4  af41  af42  af43 
+class-map match-any voice-ef-ipp5
+ match ip precedence 5 
+ match dscp cs5  ef 
+class-map match-any bronze-af1-ipp1
+ match ip precedence 1 
+ match dscp cs1  af11  af12  af13 
+class-map match-any gold-af3-ipp3
+ match ip precedence 3  6  7 
+ match dscp cs3  af31  af32  af33  cs6  cs7 
+class-map match-any silver-af2-ipp2
+ match ip precedence 2 
+ match dscp cs2  af21  af22  af23 
+
+policy-map child-ce-out
+ class voice-ef-ipp5
+  priority percent 50
+  police rate percent 50
+   conform-action transmit 
+   exceed-action drop 
+ class silver-af2-ipp2
+  bandwidth percent 25 
+  queue-limit 1000 ms
+  random-detect
+ class bronze-af1-ipp1
+  bandwidth percent 23 
+  queue-limit 2000 ms
+  random-detect
+ class class-default
+  fair-queue 4096
+  random-detect
+policy-map parent-ce-out
+ class class-default
+  shape peak 10240000
+  queue-limit 800 ms
+  random-detect
+   service-policy child-ce-out
